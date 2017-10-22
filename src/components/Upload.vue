@@ -7,26 +7,27 @@
 </template>
 
 <script>
+import { sendProject } from '../api';
 
 export default {
   name: 'upload',
   data () {
     return {
       msg: 'Upload your project',
+      files: [],
     };
   },
   methods: {
     handleChange(files) {
-      console.log(files);
+      this.files = files;
     },
     handleSend() {
-
+      sendProject(this.files);
     },
   },
 };
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 h1, h2 {
   font-weight: normal;

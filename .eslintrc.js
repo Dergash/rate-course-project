@@ -24,7 +24,14 @@ module.exports = {
     'generator-star-spacing': 'off',
     // allow debugger during development
     'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
-    'comma-dangle': ['error', "always"],
+    'comma-dangle': ['error', {
+        "arrays": "always",
+        "objects": "always",
+        "imports": "never",
+        "exports": "never",
+        "functions": "ignore"
+    }],
+    'no-unused-vars': 'off',
     'semi': ['error', "always"],
     'space-before-function-paren': 'off',
   }

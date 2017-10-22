@@ -23,7 +23,8 @@ export default {
       this.$refs.input.click();
     },
     handleChange(event) {
-      this.$emit('change', event.target.files);
+      const files = Array.from(event.target.files);
+      this.$emit('change', files);
     },
   },
 };

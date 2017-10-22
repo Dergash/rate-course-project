@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import App from './App';
+import App from './app';
 import router from './router';
 import RaisedButton from './components/ui-kit/button';
 import FileUploader from './components/ui-kit/file-uploader';
