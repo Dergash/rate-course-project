@@ -1,17 +1,27 @@
 <template>
   <div class="upload">
     <h1>{{ msg }}</h1>
-    <file-uploader>df</file-uploader>
+    <FileUploader v-on:change="handleChange" />
+    <RaisedButton value="Send" v-on:click="handleSend" />
   </div>
 </template>
 
 <script>
+
 export default {
   name: 'upload',
   data () {
     return {
       msg: 'Upload your project',
     };
+  },
+  methods: {
+    handleChange(files) {
+      console.log(files);
+    },
+    handleSend() {
+
+    },
   },
 };
 </script>

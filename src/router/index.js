@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import Router from 'vue-router';
-import Upload from '@/components/Upload';
+import Upload from '@/components/upload';
 
 Vue.use(Router);
 
