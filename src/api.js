@@ -8,5 +8,7 @@ export function sendProject(files) {
   fetch(ADD_PROJECT_URL, {
     method: 'POST',
     body,
+  }).then(response => {
+    console.log(response);
   });
 }
