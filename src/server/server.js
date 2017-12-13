@@ -4,6 +4,7 @@ import multer from 'multer';
 import fs from 'fs';
 import unzip from 'unzip';
 import errors from './errors';
+import Analyzer from './analyzer';
 
 const uploadFolder = 'upload';
 const projectsFolder = 'projects';
@@ -30,6 +31,12 @@ app.post('/projects/', upload.any(), (req, res) => {
     .catch(e => {
       res.status(500).send(e);
     });
+});
+
+app.get('/projects/:id', (req, res) => {
+  const projectPath = `${uploadFolder}/${projectsFolder}/${req.params.id}`;
+  analyzeProject(projectPath);
+  res.status(200).send('OK');
 });
 
 app.listen(port);
@@ -60,7 +67,15 @@ function unzipProject(archive) {
         entry.pipe(fs.createWriteStream(`${projectPath}/${entry.path}`));
       })
       .on('error', () => reject(errors.UNZIP_FAILED))
-      .on('close', resolve);
+      .on('close', () => resolve(projectPath));
+  });
+}
+
+function analyzeProject(path) {
+  return new Promise((resolve, reject) => {
+    const analyzer = new Analyzer();
+    analyzer.readSrcFile(path);
+    resolve();
   });
 }
 
