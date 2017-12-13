@@ -1,81 +1,93 @@
 import fs from 'fs';
 import readline from 'readline';
+import JSAnalyzer from './adapters/javascript';
+import UnknownAnalyzer from './adapters/unknown';
 
-const testFile = 'upload/projects/server.js';
+/**
+ * TODO: move to file utils
+ * @param {string} path
+ */
+function getFileName(path) {
+  const elements = path.split('/');
+  if (elements.length === 1) {
+    return path;
+  }
+  const name = elements[elements.length - 1];
+  return name;
+}
 
-const lineType = {
-  code: 0,
-  commentLine: 1,
-  commentBlockStart: 2,
-  commentBlockEnd: 3,
-  dependency: 4,
-};
+/**
+ * TODO: move to file utils
+ * @param {string} fileName
+ */
+function getFileExtension(fileName) {
+  const elements = fileName.split('.');
+  if (elements.length === 1) {
+    return null;
+  }
+  const extension = elements[elements.length - 1];
+  return `.${extension}`;
+}
+
 
 export default class Analyzer {
-  /**
-   * @param {string} path
-   */
-  readSrcFile(path) {
-    const reader = readline.createInterface({
-      input: fs.createReadStream(testFile),
-      crlfDelay: Infinity
-    });
-    let total = 0;
-    let code = 0;
-    let comment = 0;
-    let dependencies = 0;
-    let commentBlock = false;
-    reader
-      .on('line', (line) => {
-        total++;
-        const type = this.analyzeLine(line);
-        if (type === lineType.commentBlockStart) {
-          commentBlock = true;
-          comment++;
-          return;
-        }
-        if (type === lineType.commentBlockEnd) {
-          commentBlock = false;
-          comment++;
-          return;
-        }
-        if (type === lineType.commentLine || commentBlock) {
-          comment++;
-          return;
-        }
-        if (type === lineType.dependency) {
-          code++;
-          dependencies++;
-          return;
-        }
-        code++;
-      })
-      .on('close', () => {
-        console.log(`total lines of code: ${total}`);
-        console.log(`dependency modules: ${dependencies}`);
-        console.log(`code lines: ${code}`);
-        console.log(`comment lines: ${comment}`);
+
+  constructor() {
+    this.report = {
+      total: 0,
+      code: 0,
+      comment: 0,
+      files: [],
+    };
+  }
+
+  getReport() {
+    return this.report;
+  }
+
+  async analyzePath(path) {
+    const stats = fs.statSync(path);
+    if (stats.isDirectory()) {
+      const nodes = fs.readdirSync(path);
+      await Promise.all(nodes.map(node => this.analyzePath(`${path}/${node}`)));
+    }
+    if (stats.isFile()) {
+      const fileName = getFileName(path);
+      const extension = getFileExtension(fileName);
+      const stats = await this.analyzeFile(path, extension);
+      this.report.files.push({
+        path,
+        fileName,
+        extension,
+        stats,
       });
+      this.report.total = this.report.files
+        .map(file => file.stats.total)
+        .reduce((prev, next) => prev + next);
+      this.report.code = this.report.files
+        .map(file => file.stats.code ? file.stats.code : 0)
+        .reduce((prev, next) => prev + next);
+      this.report.comment = this.report.files
+        .map(file => file.stats.comment ? file.stats.comment : 0)
+        .reduce((prev, next) => prev + next);
+    }
   }
 
   /**
-   * @param {string} line 
-   * @returns {number} line type
+   * @param {string} path
+   * @param {string} extension
    */
-  analyzeLine(line) {
-    const trimmedLine = line.trim();
-    if (trimmedLine.startsWith('//')) {
-      return lineType.commentLine;
+  async analyzeFile(path, extension) {
+    const reader = readline.createInterface({
+      input: fs.createReadStream(path),
+      crlfDelay: Infinity
+    });
+    let stats = {};
+    if (extension === '.js') {
+      stats = await JSAnalyzer(reader);
+      return stats;
     }
-    if (trimmedLine.startsWith('/*')) {
-      return lineType.commentBlockStart;
-    }
-    if (trimmedLine.indexOf('*/') !== -1) {
-      return lineType.commentBlockEnd;
-    }
-    if (trimmedLine.startsWith('import ') || trimmedLine.indexOf(' require(') !== -1) {
-      return lineType.dependency;
-    }
-    return lineType.code;
+    stats = await UnknownAnalyzer(reader);
+    return stats;
   }
 }

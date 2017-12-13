@@ -27,16 +27,18 @@ app.post('/projects/', upload.any(), (req, res) => {
   console.log(`Received file ${archive.originalname}`);
   renameRequestFile(archive)
     .then(unzipProject)
-    .then(() => res.sendStatus(200))
+    .then(report => {
+      res.status(200).send(report);
+    })
     .catch(e => {
       res.status(500).send(e);
     });
 });
 
-app.get('/projects/:id', (req, res) => {
+app.get('/projects/:id', async (req, res) => {
   const projectPath = `${uploadFolder}/${projectsFolder}/${req.params.id}`;
-  analyzeProject(projectPath);
-  res.status(200).send('OK');
+  const files = await analyzeProject(projectPath);
+  res.json(files);
 });
 
 app.listen(port);
@@ -71,12 +73,11 @@ function unzipProject(archive) {
   });
 }
 
-function analyzeProject(path) {
-  return new Promise((resolve, reject) => {
-    const analyzer = new Analyzer();
-    analyzer.readSrcFile(path);
-    resolve();
-  });
+async function analyzeProject(path) {
+  const analyzer = new Analyzer();
+  await analyzer.analyzePath(path);
+  const report = analyzer.getReport();
+  return report;
 }
 
 /**
