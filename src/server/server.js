@@ -35,6 +35,18 @@ app.post('/projects/', upload.any(), (req, res) => {
     });
 });
 
+app.get('/projects/', (req, res) => {
+  const projectsIds = fs.readdirSync(`${uploadFolder}/${projectsFolder}/`);
+  const projects = projectsIds.map(id => {
+    const name = fs.readdirSync(`${uploadFolder}/${projectsFolder}/${id}`)[0];
+    return {
+      id,
+      name,
+    };
+  });
+  res.status(200).send(projects);
+});
+
 app.get('/projects/:id', async (req, res) => {
   const projectPath = `${uploadFolder}/${projectsFolder}/${req.params.id}`;
   const files = await analyzeProject(projectPath);
