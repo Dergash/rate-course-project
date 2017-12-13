@@ -57,6 +57,7 @@ function renameRequestFile(archive) {
 function unzipProject(archive) {
   return new Promise((resolve, reject) => {
     const projectPath = `${uploadFolder}/${projectsFolder}/${archive.filename}/${archive.originalname}`;
+    mkpathSync(projectPath);
     fs.createReadStream(`${archive.destination}/${archive.originalname}-${archive.filename}`)
       .pipe(unzip.Parse())
       .on('entry', entry => {

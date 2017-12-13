@@ -1,6 +1,7 @@
 import fs from 'fs';
 import readline from 'readline';
 import JSAnalyzer from './adapters/javascript';
+import VueAnalyzer from './adapters/vue';
 import UnknownAnalyzer from './adapters/unknown';
 
 /**
@@ -29,7 +30,6 @@ function getFileExtension(fileName) {
   return `.${extension}`;
 }
 
-
 export default class Analyzer {
 
   constructor() {
@@ -37,6 +37,8 @@ export default class Analyzer {
       total: 0,
       code: 0,
       comment: 0,
+      css: 0,
+      html: 0,
       files: [],
     };
   }
@@ -70,6 +72,12 @@ export default class Analyzer {
       this.report.comment = this.report.files
         .map(file => file.stats.comment ? file.stats.comment : 0)
         .reduce((prev, next) => prev + next);
+      this.report.css = this.report.files
+        .map(file => file.stats.css ? file.stats.css : 0)
+        .reduce((prev, next) => prev + next);
+      this.report.html = this.report.files
+        .map(file => file.stats.html ? file.stats.html : 0)
+        .reduce((prev, next) => prev + next);
     }
   }
 
@@ -85,6 +93,10 @@ export default class Analyzer {
     let stats = {};
     if (extension === '.js') {
       stats = await JSAnalyzer(reader);
+      return stats;
+    }
+    if (extension === '.vue') {
+      stats = await VueAnalyzer(reader);
       return stats;
     }
     stats = await UnknownAnalyzer(reader);
