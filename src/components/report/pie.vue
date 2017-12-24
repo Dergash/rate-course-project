@@ -1,5 +1,5 @@
 <template>
-  <div class="chart">
+  <div class="pie">
     <svg width="600" height="400"></svg>
     <ul class="legend">
       <li class="legend-item" v-for="item in legendItems">
@@ -32,7 +32,6 @@ export default {
     },
     total: function() {
       const pek = this.data.filter(item => item.service).find(item => item.name === 'total');
-      console.log(pek);
       return (pek ? pek.value : 0);
     }
   },
@@ -56,8 +55,8 @@ export default {
 };
 
 function buildPie(data) {
-  const svg = d3.select('svg');
-  d3.selectAll('svg > *').remove();
+  const svg = d3.select('.pie > svg');
+  d3.selectAll('.pie > svg > *').remove();
   const width = Number.parseInt(svg.attr('width'), 10);
   const height = Number.parseInt(svg.attr('height'), 10);
   const radius = Math.min(width, height) / 2;
@@ -114,6 +113,7 @@ function buildPie(data) {
 
 .legend-total {
   margin-top: 16px;
+  font-weight: bold;
 }
 
 </style>

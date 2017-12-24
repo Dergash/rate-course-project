@@ -15,7 +15,7 @@
           </li>
         </ul>
       </aside>
-      <Report :report='report' />
+      <Report :report='report' class="report" />
     </main>
   </div>
 </template>
@@ -60,10 +60,15 @@ main {
 }
 
 aside {
-  width: 30%;
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
+  flex-grow: 1;
+  max-width: 20%;
+}
+
+.report {
+  flex-grow: 8;
 }
 
 h1, h2 {
