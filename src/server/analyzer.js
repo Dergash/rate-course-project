@@ -3,35 +3,9 @@ import readline from 'readline';
 import JSAnalyzer from './adapters/javascript';
 import VueAnalyzer from './adapters/vue';
 import UnknownAnalyzer from './adapters/unknown';
-
-/**
- * TODO: move to file utils
- * @param {string} path
- */
-function getFileName(path) {
-  const elements = path.split('/');
-  if (elements.length === 1) {
-    return path;
-  }
-  const name = elements[elements.length - 1];
-  return name;
-}
-
-/**
- * TODO: move to file utils
- * @param {string} fileName
- */
-function getFileExtension(fileName) {
-  const elements = fileName.split('.');
-  if (elements.length === 1) {
-    return null;
-  }
-  const extension = elements[elements.length - 1];
-  return `.${extension}`;
-}
+import { getFileName, getFileExtension } from '../utils/fs';
 
 export default class Analyzer {
-
   constructor() {
     this.report = {
       metrics: [

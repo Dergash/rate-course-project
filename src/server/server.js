@@ -3,11 +3,14 @@ import cors from 'cors';
 import multer from 'multer';
 import fs from 'fs';
 import unzip from 'unzip';
+import * as tar from 'tar';
 import errors from './errors';
 import Analyzer from './analyzer';
+import { getFileExtension } from '../utils/fs';
 
 const uploadFolder = 'upload';
 const projectsFolder = 'projects';
+mkpathSync(`${uploadFolder}/${projectsFolder}/`);
 
 const upload = multer({ dest: `${uploadFolder}/` });
 const app = express();
@@ -26,25 +29,27 @@ app.post('/projects/', upload.any(), (req, res) => {
   const archive = req.files[0];
   console.log(`Received file ${archive.originalname}`);
   renameRequestFile(archive)
-    .then(unzipProject)
+    .then(unpack)
     .then(report => {
       res.status(200).send(report);
     })
     .catch(e => {
-      res.status(500).send(e);
+      res.status(500).send(e.message);
     });
 });
 
 app.get('/projects/', (req, res) => {
-  const projectsIds = fs.readdirSync(`${uploadFolder}/${projectsFolder}/`);
-  const projects = projectsIds.map(id => {
-    const name = fs.readdirSync(`${uploadFolder}/${projectsFolder}/${id}`)[0];
-    return {
-      id,
-      name,
-    };
-  });
-  res.status(200).send(projects);
+  setTimeout(() => {
+    const projectsIds = fs.readdirSync(`${uploadFolder}/${projectsFolder}/`);
+    const projects = projectsIds.map(id => {
+      const name = fs.readdirSync(`${uploadFolder}/${projectsFolder}/${id}`)[0];
+      return {
+        id,
+        name,
+      };
+    });
+    res.status(200).send(projects);
+  }, 100);
 });
 
 app.get('/projects/:id', async (req, res) => {
@@ -66,10 +71,40 @@ function renameRequestFile(archive) {
   });
 }
 
-function unzipProject(archive) {
+async function unpack(archive) {
+  const projectPath = `${uploadFolder}/${projectsFolder}/${archive.filename}/${archive.originalname}`;
+  mkpathSync(projectPath);
+  const extension = getFileExtension(archive.originalname);
+  if (extension === '.zip') {
+    return await unzipProject(archive);
+  }
+  if (extension === '.tgz' || extension === '.gz') {
+    return await untarProject(archive);
+  }
+  throw Error(`Unknown archive type: ${extension}`);
+}
+
+function untarProject(archive) {
+  const projectPath = `${uploadFolder}/${projectsFolder}/${archive.filename}/${archive.originalname}`;
+  mkpathSync(`${projectPath}`);
   return new Promise((resolve, reject) => {
-    const projectPath = `${uploadFolder}/${projectsFolder}/${archive.filename}/${archive.originalname}`;
-    mkpathSync(projectPath);
+    fs.createReadStream(`${archive.destination}/${archive.originalname}-${archive.filename}`)
+      .pipe(
+        tar.x({
+          C: `${projectPath}` // alias for cwd:'some-dir', also ok
+        })
+      )
+      .on('entry', entry => {
+        console.log(entry.absolute);
+      })
+      .on('error', () => reject(errors.UNZIP_FAILED))
+      .on('close', () => resolve(projectPath));
+  });
+}
+
+function unzipProject(archive) {
+  const projectPath = `${uploadFolder}/${projectsFolder}/${archive.filename}/${archive.originalname}`;
+  return new Promise((resolve, reject) => {
     fs.createReadStream(`${archive.destination}/${archive.originalname}-${archive.filename}`)
       .pipe(unzip.Parse())
       .on('entry', entry => {

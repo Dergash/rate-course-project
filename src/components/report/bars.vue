@@ -28,6 +28,7 @@ export default {
 
 function buildBars(data) {
   const svg = d3.select('.bars > svg');
+  svg.selectAll('*').remove();
   const margin = {top: 20, right: 20, bottom: 30, left: 40};
   const width = +svg.attr('width') - margin.left - margin.right;
   const height = +svg.attr('height') - margin.top - margin.bottom;

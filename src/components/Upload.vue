@@ -43,12 +43,14 @@ export default {
     handleChange(files) {
       this.files = files;
     },
-    handleSend() {
-      sendProject(this.files);
+    async handleSend() {
+      await sendProject(this.files);
+      const pek = await getProjects();
+      console.log(pek);
+      this.projects = pek;
     },
     async handleReport(event, id) {
-      const ek = await getReport(id);
-      this.report = ek;
+      this.report = await getReport(id);
     }
   },
 };
