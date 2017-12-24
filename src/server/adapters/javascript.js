@@ -1,9 +1,10 @@
 const lineType = {
-  code: 0,
+  javascript: 0,
   commentLine: 1,
   commentBlockStart: 2,
   commentBlockEnd: 3,
   dependency: 4,
+  empty: 5,
 };
 
 /**
@@ -13,14 +14,18 @@ const lineType = {
 function analyze(reader) {
   return new Promise((resolve, reject) => {
     let total = 0;
-    let code = 0;
+    let javascript = 0;
     let comment = 0;
     let dependencies = 0;
     let commentBlock = false;
     reader
       .on('line', line => {
-        total++;
         const type = analyzeLine(line);
+        if (type !== lineType.empty) {
+          total++;
+        } else {
+          return;
+        }
         if (type === lineType.commentBlockStart) {
           commentBlock = true;
           comment++;
@@ -36,16 +41,16 @@ function analyze(reader) {
           return;
         }
         if (type === lineType.dependency) {
-          code++;
+          javascript++;
           dependencies++;
           return;
         }
-        code++;
+        javascript++;
       })
       .on('close', () => {
         resolve({
           total,
-          code,
+          javascript,
           comment,
           dependencies,
         });
@@ -71,7 +76,10 @@ function analyzeLine(line) {
   if (trimmedLine.startsWith('import ') || trimmedLine.indexOf(' require(') !== -1) {
     return lineType.dependency;
   }
-  return lineType.code;
+  if (trimmedLine.length === 0) {
+    return lineType.empty;
+  }
+  return lineType.javascript;
 }
 
 export default analyze;

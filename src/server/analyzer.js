@@ -34,11 +34,13 @@ export default class Analyzer {
 
   constructor() {
     this.report = {
-      total: 0,
-      code: 0,
-      comment: 0,
-      css: 0,
-      html: 0,
+      metrics: [
+        { name: 'total', value: 0 },
+        { name: 'javascript', value: 0 },
+        { name: 'comment', value: 0 },
+        { name: 'css', value: 0 },
+        { name: 'html', value: 0 },
+      ],
       files: [],
     };
   }
@@ -63,21 +65,20 @@ export default class Analyzer {
         extension,
         stats,
       });
-      this.report.total = this.report.files
-        .map(file => file.stats.total)
-        .reduce((prev, next) => prev + next);
-      this.report.code = this.report.files
-        .map(file => file.stats.code ? file.stats.code : 0)
-        .reduce((prev, next) => prev + next);
-      this.report.comment = this.report.files
-        .map(file => file.stats.comment ? file.stats.comment : 0)
-        .reduce((prev, next) => prev + next);
-      this.report.css = this.report.files
-        .map(file => file.stats.css ? file.stats.css : 0)
-        .reduce((prev, next) => prev + next);
-      this.report.html = this.report.files
-        .map(file => file.stats.html ? file.stats.html : 0)
-        .reduce((prev, next) => prev + next);
+      const metricTypes = this.report.metrics.map(metric => metric.name);
+      metricTypes.forEach(type => {
+        this.report.metrics = this.report.metrics.map(metric => {
+          return (metric.name === type)
+          ? {
+            name: type,
+            value: this.report.files
+              .map(file => file.stats[type] ? file.stats[type] : 0)
+              .reduce((prev, next) => prev + next),
+          }
+          : metric;
+        }
+        );
+      });
     }
   }
 

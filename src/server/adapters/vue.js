@@ -1,5 +1,5 @@
 const lineType = {
-  code: 0,
+  javascript: 0,
   commentLine: 1,
   commentBlockStart: 2,
   commentBlockEnd: 3,
@@ -9,6 +9,7 @@ const lineType = {
   scriptBlockEnd: 7,
   styleBlockStart: 8,
   styleBlockEnd: 9,
+  empty: 10,
 };
 
 /**
@@ -19,7 +20,7 @@ function analyze(reader) {
   return new Promise((resolve, reject) => {
     let total = 0;
     let html = 0;
-    let code = 0;
+    let javascript = 0;
     let css = 0;
     let comment = 0;
     let commentBlock = false;
@@ -28,8 +29,12 @@ function analyze(reader) {
     let styleBlock = false;
     reader
       .on('line', line => {
-        total++;
         const type = analyzeLine(line);
+        if (type !== lineType.empty) {
+          total++;
+        } else {
+          return;
+        }
         if (type === lineType.commentBlockStart) {
           commentBlock = true;
           comment++;
@@ -69,7 +74,7 @@ function analyze(reader) {
           return;
         }
         if (scriptBlock) {
-          code++;
+          javascript++;
           return;
         }
         if (type === lineType.styleBlockStart) {
@@ -90,7 +95,7 @@ function analyze(reader) {
       .on('close', () => {
         resolve({
           total,
-          code,
+          javascript,
           comment,
           html,
           css,
@@ -132,7 +137,10 @@ function analyzeLine(line) {
   if (trimmedLine.indexOf('</script>') !== -1) {
     return lineType.styleBlockEnd;
   }
-  return lineType.code;
+  if (trimmedLine.length === 0) {
+    return lineType.empty;
+  }
+  return lineType.javascript;
 }
 
 export default analyze;

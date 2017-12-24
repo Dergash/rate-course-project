@@ -7,7 +7,9 @@ function analyze(reader) {
     let total = 0;
     reader
       .on('line', line => {
-        total++;
+        if (!line.length) {
+          total++;
+        }
       })
       .on('close', () => {
         resolve({

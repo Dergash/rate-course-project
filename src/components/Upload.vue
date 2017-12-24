@@ -1,23 +1,22 @@
 <template>
   <div class="upload">
-    <h1>{{ msg }}</h1>
-    <FileUploader v-on:change="handleChange" />
-    <RaisedButton value="Send" v-on:click="handleSend" />
-    <h2>Проекты</h2>
-    <ul>
-      <li v-for="project in projects">
-        {{ project.name }} - {{ project.id }}
-        <RaisedButton value="Report" v-on:click="handleReport($event, project.id)" />
-      </li>
-    </ul>
-    <h2>Отчет</h2>
-    <ul v-if="report">
-      <li>Всего строк: {{ report.total }}</li>
-      <li>JS-кода: {{ report.code }}</li>
-      <li>HTML-кода: {{ report.html }}</li>
-      <li>CSS-кода: {{ report.css }}</li>
-      <li>Комментариев: {{ report.comment }}</li>
-    </ul>
+    <main>
+      <aside>
+        <h1>{{ msg }}</h1>
+        <FileUploader v-on:change="handleChange" />
+        <RaisedButton value="Send" v-on:click="handleSend" />
+        <h2>Проекты</h2>
+        <ul class="list">
+          <li v-for="project in projects">
+            <RaisedButton value="Report" v-on:click="handleReport($event, project.id)" />
+            <span :title="getProjectName(project)">
+              {{ getProjectName(project) }}
+            </span>
+          </li>
+        </ul>
+      </aside>
+      <Report :report='report' />
+    </main>
   </div>
 </template>
 
@@ -38,6 +37,9 @@ export default {
     this.projects = await getProjects();
   },
   methods: {
+    getProjectName(project) {
+      return `${project.name} - ${project.id}`;
+    },
     handleChange(files) {
       this.files = files;
     },
@@ -45,13 +47,25 @@ export default {
       sendProject(this.files);
     },
     async handleReport(event, id) {
-      this.report = await getReport(id);
+      const ek = await getReport(id);
+      this.report = ek;
     }
   },
 };
 </script>
 
 <style scoped>
+main {
+  display: flex;
+}
+
+aside {
+  width: 30%;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
 h1, h2 {
   font-weight: normal;
 }
@@ -61,12 +75,16 @@ ul {
   padding: 0;
 }
 
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-
 a {
   color: #42b983;
 }
+
+ul.list li {
+  display: block;
+  margin-bottom: 6px;
+  text-align: left;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
 </style>
